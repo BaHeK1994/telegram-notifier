@@ -72,8 +72,13 @@ final class TelegramTransport extends AbstractTransport
             throw new LogicException(sprintf('The "%s" transport only supports instances of "%s" for options.', __CLASS__, TelegramOptions::class));
         }
 
-        $endpoint = sprintf('https://%s/bot%s/sendMessage', $this->getEndpoint(), $this->token);
         $options = ($opts = $message->getOptions()) ? $opts->toArray() : [];
+
+        $method = $options['method'] ?? 'sendMessage';
+        unset($options['method']);
+
+        $endpoint = sprintf('https://%s/bot%s/%s', $this->getEndpoint(), $this->token, $method);
+
         if (!isset($options['chat_id'])) {
             $options['chat_id'] = $message->getRecipientId() ?: $this->chatChannel;
         }

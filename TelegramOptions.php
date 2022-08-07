@@ -102,4 +102,24 @@ final class TelegramOptions implements MessageOptionsInterface
 
         return $this;
     }
+
+    /**
+     * @return $this
+     */
+    public function setMethod(string $method): self
+    {
+        $this->options['method'] = $method;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setCallBackQueryId(string $callBackQueryId): self
+    {
+        $this->options['callback_query_id'] = $callBackQueryId;
+
+        return $this;
+    }
 }
