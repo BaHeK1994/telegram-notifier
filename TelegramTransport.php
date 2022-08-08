@@ -79,7 +79,7 @@ final class TelegramTransport extends AbstractTransport
 
         $endpoint = sprintf('https://%s/bot%s/%s', $this->getEndpoint(), $this->token, $method);
 
-        if (!isset($options['chat_id'])) {
+        if (!isset($options['chat_id']) && $method === 'sendMessage') {
             $options['chat_id'] = $message->getRecipientId() ?: $this->chatChannel;
         }
 
@@ -88,6 +88,10 @@ final class TelegramTransport extends AbstractTransport
         if (!isset($options['parse_mode']) || TelegramOptions::PARSE_MODE_MARKDOWN_V2 === $options['parse_mode']) {
             $options['parse_mode'] = TelegramOptions::PARSE_MODE_MARKDOWN_V2;
             $options['text'] = preg_replace('/([_*\[\]()~`>#+\-=|{}.!])/', '\\\\$1', $message->getSubject());
+        }
+
+        if ($options['text'] === '') {
+            unset($options['text']);
         }
 
         $response = $this->client->request('POST', $endpoint, [
@@ -103,12 +107,12 @@ final class TelegramTransport extends AbstractTransport
         if (200 !== $statusCode) {
             $result = $response->toArray(false);
 
-            throw new TransportException('Unable to post the Telegram message: '.$result['description'].sprintf(' (code %s).', $result['error_code']), $response);
+            throw new TransportException('Unable to post the Telegram message: ' . $result['description'] . sprintf(' (code %s).', $result['error_code']), $response);
         }
 
         $success = $response->toArray(false);
 
-        $sentMessage = new SentMessage($message, (string) $this);
+        $sentMessage = new SentMessage($message, (string)$this);
         $sentMessage->setMessageId($success['result']['message_id'] ?? '');
 
         return $sentMessage;
