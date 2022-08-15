@@ -122,4 +122,19 @@ final class TelegramOptions implements MessageOptionsInterface
 
         return $this;
     }
+
+    public function __set(string $key, $value)
+    {
+        $this->options[$key] = $value;
+    }
+
+    public function __get(string $key)
+    {
+        return $this->options[$key] ?? null;
+    }
+
+    public function __unset(string $key)
+    {
+        unset($this->options[$key]);
+    }
 }
