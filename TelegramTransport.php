@@ -107,12 +107,22 @@ final class TelegramTransport extends AbstractTransport
         if (200 !== $statusCode) {
             $result = $response->toArray(false);
 
-            // Если это редактирование сообщения и предыдущее не найдено, то отправляем новое
-            if ($method === 'editMessageText' && $result['description'] === 'message to edit not found' &&
-                $opts instanceof TelegramOptions) {
-                unset($opts->method, $opts->message_id);
+            // Если это редактирование сообщения и ошибка, то отправляем новое
+            if ($method === 'editMessageText' && $opts instanceof TelegramOptions) {
+                // Пытаемся удалить
+                $opts->setMethod('deleteMessage');
+                $this->doSend($message);
 
+                // Отправляем новое сообщение
+                unset($opts->method, $opts->message_id);
                 return $this->doSend($message);
+            }
+
+            // Если это метод удаления, игнорируем ошибку
+            if ($method === 'deleteMessage') {
+                $sentMessage = new SentMessage($message, (string)$this);
+                $sentMessage->setMessageId($opts->message_id ?? '');
+                return $sentMessage;
             }
 
             throw new TransportException('Unable to post the Telegram message: ' . $result['description'] . sprintf(' (code %s).', $result['error_code']), $response);
