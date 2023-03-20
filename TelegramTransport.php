@@ -125,7 +125,10 @@ final class TelegramTransport extends AbstractTransport
                 return $sentMessage;
             }
 
-            throw new TransportException('Unable to post the Telegram message: ' . $result['description'] . sprintf(' (code %s).', $result['error_code']), $response);
+            throw new TransportException('Unable to post the Telegram message: ' . $result['description'] .
+                sprintf(' (code %s).', $result['error_code']) . "\n" .
+                "Options: " . json_encode($options),
+                $response);
         }
 
         $success = $response->toArray(false);
