@@ -77,7 +77,10 @@ final class TelegramTransport extends AbstractTransport
         $method = $options['method'] ?? 'sendMessage';
         unset($options['method']);
 
-        $endpoint = sprintf('https://%s/bot%s/%s', $this->getEndpoint(), $this->token, $method);
+        $token = $options['user_token'] ?? $this->token;
+        unset($options['user_token']);
+
+        $endpoint = sprintf('https://%s/bot%s/%s', $this->getEndpoint(), $token, $method);
 
         if (!isset($options['chat_id']) && $method === 'sendMessage') {
             $options['chat_id'] = $message->getRecipientId() ?: $this->chatChannel;

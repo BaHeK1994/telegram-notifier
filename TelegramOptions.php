@@ -123,6 +123,17 @@ final class TelegramOptions implements MessageOptionsInterface
         return $this;
     }
 
+    public function setUserToken(?string $token = null): self
+    {
+        if ($token !== null) {
+            $this->options['user_token'] = $token;
+        } else {
+            unset($this->options['user_token']);
+        }
+
+        return $this;
+    }
+
     public function __set(string $key, $value)
     {
         $this->options[$key] = $value;
