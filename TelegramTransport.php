@@ -121,8 +121,8 @@ final class TelegramTransport extends AbstractTransport
                 return $this->doSend($message);
             }
 
-            // Если это метод удаления, игнорируем ошибку
-            if ($method === 'deleteMessage') {
+            // Если это метод удаления или answerCallbackQuery, игнорируем ошибку
+            if (in_array($method, ['deleteMessage', 'answerCallbackQuery'])) {
                 $sentMessage = new SentMessage($message, (string)$this);
                 $sentMessage->setMessageId($opts->message_id ?? '');
                 return $sentMessage;
