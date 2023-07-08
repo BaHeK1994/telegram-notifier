@@ -11,6 +11,9 @@
 
 namespace Symfony\Component\Notifier\Bridge\Telegram;
 
+use Symfony\Component\Mime\Part\DataPart;
+use Symfony\Component\Mime\Part\Multipart\FormDataPart;
+use Symfony\Component\Mime\Part\TextPart;
 use Symfony\Component\Notifier\Exception\LogicException;
 use Symfony\Component\Notifier\Exception\TransportException;
 use Symfony\Component\Notifier\Exception\UnsupportedMessageTypeException;
@@ -97,9 +100,48 @@ final class TelegramTransport extends AbstractTransport
             unset($options['text']);
         }
 
-        $response = $this->client->request('POST', $endpoint, [
-            'json' => array_filter($options),
-        ]);
+        if ($method === 'sendPhoto') {
+            $fullFile = $options['photo'];
+            $mime = function_exists('mime_content_type') ? mime_content_type($fullFile) : null;
+            $fileName = basename($fullFile);
+
+            $options['photo'] = new DataPart(fopen($fullFile, 'r'), $fileName, $mime);
+
+            foreach ($options as &$param) {
+                if (is_bool($param)) {
+                    $param = $param ? 'true' : 'false';
+                    continue;
+                }
+
+                if (!is_string($param) && !is_array($param) && !$param instanceof TextPart) {
+                    $param = (string)$param;
+                }
+            }
+            unset($param);
+
+            $dataPart = new FormDataPart($options);
+            $options = $dataPart->bodyToString();
+
+            $parseHeaders = [];
+
+            // Парсинг заголовков
+            foreach ($dataPart->getPreparedHeaders()->toArray() as $header) {
+                list($key, $value) = explode(':', $header, 2);
+                $key = trim($key);
+                $value = trim($value);
+
+                $parseHeaders[$key] = $value;
+            }
+
+            $response = $this->client->request('POST', $endpoint, [
+                'body' => $options,
+                'headers' => $parseHeaders
+            ]);
+        } else {
+            $response = $this->client->request('POST', $endpoint, [
+                'json' => array_filter($options),
+            ]);
+        }
 
         try {
             $statusCode = $response->getStatusCode();
